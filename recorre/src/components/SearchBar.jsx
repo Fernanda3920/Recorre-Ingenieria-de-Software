@@ -1,9 +1,8 @@
-// SearchBar.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const SearchBar = ({ onSearch }) => {
-  const [query, setQuery] = useState('');
+const SearchBar = ({ onSearch, value }) => {
+  const [query, setQuery] = useState(value);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -11,6 +10,11 @@ const SearchBar = ({ onSearch }) => {
       onSearch(query);
     }
   };
+
+  // Actualiza el valor del campo de búsqueda cuando cambia la dirección (prop value)
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
 
   return (
     <form
@@ -31,14 +35,14 @@ const SearchBar = ({ onSearch }) => {
         className="form-control me-2 bg-dark text-white"
         placeholder="Buscar ubicación..."
         aria-label="Search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        value={query} // Aquí se refleja el valor de la dirección
+        onChange={(e) => setQuery(e.target.value)} // Permite la edición manual
         style={{
           border: '1px solid #555',
         }}
       />
       <button className="btn btn-outline-light" type="submit">
-      <i class="fa fa-search" aria-hidden="true"></i>
+        <i className="fa fa-search" aria-hidden="true"></i>
       </button>
     </form>
   );
