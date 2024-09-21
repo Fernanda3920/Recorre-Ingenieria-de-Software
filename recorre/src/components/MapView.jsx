@@ -22,6 +22,7 @@ const MapView = () => {
     const [address, setAddress] = useState('');
     const [locations, setLocations] = useState([]); // Incluye nombre y coordenadas
     const [route, setRoute] = useState([]); // Estado para guardar la ruta optimizada
+    const [hasSearched, setHasSearched] = useState(false); 
     const mapRef = useRef(null);
 
   useEffect(() => {
@@ -47,11 +48,12 @@ const MapView = () => {
       if (data.length > 0) {
         const { lat, lon, display_name } = data[0];
         const newPosition = [parseFloat(lat), parseFloat(lon)];
-        
+  
         // Guarda un objeto con la dirección y las coordenadas
         setLocations((prev) => [...prev, { lat: parseFloat(lat), lng: parseFloat(lon), display_name }]);
         setPosition(newPosition); // Actualiza la posición
-    
+        setHasSearched(true); // Actualiza el estado a verdadero
+  
         // Cambia la vista del mapa a la nueva posición
         mapRef.current.setView(newPosition, 15);
       } else {
@@ -61,10 +63,11 @@ const MapView = () => {
       console.error("Error al buscar la dirección:", error);
     }
   };
-
-  const fetchOptimizedRoute = async (startCoords, endCoords) => {
+  
+  const fetchOptimizedRoute = async (points) => {
     const apiKey = '8bfb01f1-4e92-4260-abf0-7e19014f7b5c';
-    const url = `https://graphhopper.com/api/1/route?point=${startCoords[0]},${startCoords[1]}&point=${endCoords[0]},${endCoords[1]}&vehicle=car&locale=en&points_encoded=true&key=${apiKey}`;
+    const pointsString = points.map(point => `${point.lat},${point.lng}`).join('&point=');
+    const url = `https://graphhopper.com/api/1/route?point=${pointsString}&vehicle=car&locale=en&points_encoded=true&key=${apiKey}`;
   
     try {
       const response = await fetch(url);
@@ -84,14 +87,10 @@ const MapView = () => {
       console.error('Error fetching route:', error);
     }
   };
-
-  // Optimizar la ruta basada en las ubicaciones
-  const handleOptimizeRoute = (updatedLocations) => {
-    const locationsToUse = updatedLocations || locations; // Usa las ubicaciones actualizadas si se pasan
-    if (locationsToUse.length > 1) {
-      const startCoords = [locationsToUse[0].lat, locationsToUse[0].lng];
-      const endCoords = [locationsToUse[locationsToUse.length - 1].lat, locationsToUse[locationsToUse.length - 1].lng];
-      fetchOptimizedRoute(startCoords, endCoords).then((optimizedRoute) => {
+  
+  const handleOptimizeRoute = () => {
+    if (locations.length > 1 || (hasSearched && locations.length === 1)) {
+      fetchOptimizedRoute(locations).then((optimizedRoute) => {
         if (optimizedRoute) {
           setRoute(optimizedRoute);
         }
@@ -103,28 +102,19 @@ const MapView = () => {
   
   const handleMarkerDragEnd = (loc, e) => {
     const newPos = e.target.getLatLng(); // Obtén la nueva posición del marcador
-  
     setLocations((prev) => {
       const updatedLocations = prev.map((location) =>
         location.display_name === loc.display_name
           ? { ...location, lat: newPos.lat, lng: newPos.lng }
           : location
       );
-  
-      // Llama a la función de optimización de rutas solo después de actualizar las ubicaciones
       handleOptimizeRoute(updatedLocations);
-      
-      // Actualiza la dirección inmediatamente
       fetchAddress(newPos.lat, newPos.lng).then(() => {
-        // Aquí puedes abrir el Popup si es necesario
         e.target.openPopup();
       });
-  
       return updatedLocations; // Retorna el nuevo estado
     });
   };
-  
-  
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
       <SearchBar onSearch={handleSearch} value={address} />
