@@ -18,12 +18,13 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapView = () => {
-    const [position, setPosition] = useState(null);
-    const [address, setAddress] = useState('');
-    const [locations, setLocations] = useState([]); // Incluye nombre y coordenadas
-    const [route, setRoute] = useState([]); // Estado para guardar la ruta optimizada
-    const [hasSearched, setHasSearched] = useState(false); 
-    const mapRef = useRef(null);
+  const [position, setPosition] = useState(null);
+  const [address, setAddress] = useState('');
+  const [locations, setLocations] = useState([]); // Incluye nombre y coordenadas
+  const [route, setRoute] = useState([]); // Estado para guardar la ruta optimizada
+  const [hasSearched, setHasSearched] = useState(false); 
+  const [vehicleType, setVehicleType] = useState('car'); // Valor por defecto
+  const mapRef = useRef(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -48,13 +49,9 @@ const MapView = () => {
       if (data.length > 0) {
         const { lat, lon, display_name } = data[0];
         const newPosition = [parseFloat(lat), parseFloat(lon)];
-  
-        // Guarda un objeto con la dirección y las coordenadas
         setLocations((prev) => [...prev, { lat: parseFloat(lat), lng: parseFloat(lon), display_name }]);
         setPosition(newPosition); // Actualiza la posición
         setHasSearched(true); // Actualiza el estado a verdadero
-  
-        // Cambia la vista del mapa a la nueva posición
         mapRef.current.setView(newPosition, 15);
       } else {
         console.error("No se encontró la dirección");
@@ -67,8 +64,7 @@ const MapView = () => {
   const fetchOptimizedRoute = async (points) => {
     const apiKey = '8bfb01f1-4e92-4260-abf0-7e19014f7b5c';
     const pointsString = points.map(point => `${point.lat},${point.lng}`).join('&point=');
-    const url = `https://graphhopper.com/api/1/route?point=${pointsString}&vehicle=car&locale=en&points_encoded=true&key=${apiKey}`;
-  
+    const url = `https://graphhopper.com/api/1/route?point=${pointsString}&vehicle=${vehicleType}&locale=en&points_encoded=true&key=${apiKey}`; // Usa el tipo de vehículo
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -79,8 +75,6 @@ const MapView = () => {
       if (!data.paths || data.paths.length === 0) {
         throw new Error('No se encontraron rutas');
       }
-  
-      // Decodificar la ruta
       const route = polyline.decode(data.paths[0].points);
       return route;
     } catch (error) {
@@ -108,17 +102,20 @@ const MapView = () => {
           ? { ...location, lat: newPos.lat, lng: newPos.lng }
           : location
       );
-      handleOptimizeRoute(updatedLocations);
       fetchAddress(newPos.lat, newPos.lng).then(() => {
         e.target.openPopup();
       });
       return updatedLocations; // Retorna el nuevo estado
     });
   };
+
+  const handleRemoveLocation = (loc) => {
+    setLocations((prev) => prev.filter(location => location.display_name !== loc));
+  };
+  
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
       <SearchBar onSearch={handleSearch} value={address} />
-
       {position && (
         <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }} ref={mapRef}>
           <TileLayer
@@ -126,50 +123,51 @@ const MapView = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
           <ZoomControl position="bottomright" />
-          
-          {/* Renderiza todos los marcadores */}
           {locations.map((loc, index) => (
-             <Marker
-             key={index}
-             position={[loc.lat, loc.lng]}
-             draggable={true}
-             eventHandlers={{
-               dragend: (e) => handleMarkerDragEnd(loc, e) // Asegúrate de pasar el evento aquí
-             }}
-           >
+            <Marker
+              key={index}
+              position={[loc.lat, loc.lng]}
+              draggable={true}
+              eventHandlers={{
+                dragend: (e) => handleMarkerDragEnd(loc, e) // Asegúrate de pasar el evento aquí
+              }}
+            >
               <Popup>
                 {loc.display_name || 'Ubicación sin nombre'}
               </Popup>
             </Marker>
           ))}
-          
-          {/* Dibuja la polilínea de la ruta optimizada */}
           {route.length > 0 && (
             <Polyline positions={route} color="#38C7D5" />
           )}
         </MapContainer>
       )}
-
       <LocationList
         locations={locations.map(loc => loc.display_name)}
+        onRemoveLocation={handleRemoveLocation} // Asegúrate de definir esta función en MapView
       />
-
-      {/* Botón para optimizar la ruta */}
-      <button
-        onClick={handleOptimizeRoute}
-        style={{
-          position: 'absolute',
-          bottom: '10px',
-          left: '10px',
-          zIndex: 1000,
-          backgroundColor: 'white',
-          padding: '10px',
-          cursor: 'pointer'
-        }}
-      >
-        Optimizar Ruta
-      </button>
-    </div>
+ <div style={{ position: 'absolute', bottom: '10px', left: '10px', zIndex: 1000 }}>
+  <button
+    onClick={handleOptimizeRoute}
+    style={{
+      backgroundColor: 'white',
+      padding: '10px',
+      cursor: 'pointer'
+    }}
+  >
+    Optimizar Ruta
+  </button>
+  <select 
+    value={vehicleType} 
+    onChange={(e) => setVehicleType(e.target.value)} 
+    style={{ marginLeft: '10px' }} // Espaciado
+  >
+    <option value="car">Coche</option>
+    <option value="bike">Bicicleta</option>
+    <option value="foot">A pie</option>
+  </select>
+</div>
+</div>
   );
 };
 

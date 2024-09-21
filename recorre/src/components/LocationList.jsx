@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 const LocationList = ({ locations, onRemoveLocation }) => {
-  const [isCollapsed, setIsCollapsed] = useState(true); // Cambiar a true para que inicie colapsado
-  const [iconColor, setIconColor] = useState('#38C7D5'); // Color inicial del ícono
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [iconColor, setIconColor] = useState('#38C7D5');
 
   const toggleCollapse = () => {
     setIsCollapsed(prev => !prev);
@@ -12,15 +12,34 @@ const LocationList = ({ locations, onRemoveLocation }) => {
     onRemoveLocation(loc);
   };
 
-  // Efecto para cambiar el color del ícono cuando se agrega una nueva ubicación
+  const handleSaveLocations = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ names: locations }), // Envía el array de ubicaciones
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al guardar las ubicaciones');
+      }
+
+      const data = await response.json();
+      console.log(data.message); // Maneja la respuesta como desees
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
   useEffect(() => {
     if (locations.length > 0) {
-      setIconColor('#D8FCFF'); // Color al agregar ubicación
+      setIconColor('#D8FCFF');
       const timer = setTimeout(() => {
-        setIconColor('#38C7D5'); // Regresar al color original después de 1 segundo
+        setIconColor('#38C7D5');
       }, 1000);
-
-      return () => clearTimeout(timer); // Limpiar el timer si el componente se desmonta
+      return () => clearTimeout(timer);
     }
   }, [locations]);
 
@@ -56,14 +75,6 @@ const LocationList = ({ locations, onRemoveLocation }) => {
         <i className={isCollapsed ? 'fas fa-angle-double-right' : 'fas fa-angle-double-left'}></i>
       </button>
 
-      {/* Icono de ubicación visible en estado colapsado */}
-      {isCollapsed && (
-        <div style={{ textAlign: 'center', marginTop: '30px' }}>
-          <i className="fas fa-map-marker-alt" 
-             style={{ color: iconColor, fontSize: '24px', transition: 'color 0.5s ease' }}></i>
-        </div>
-      )}
-
       {!isCollapsed && (
         <>
           <h4>Ubicaciones</h4>
@@ -75,13 +86,15 @@ const LocationList = ({ locations, onRemoveLocation }) => {
                   style={{ color: '#38C7D5', cursor: 'pointer', marginRight: '5px' }} 
                   onClick={() => handleRemoveLocation(loc)}
                 ></i>
-                {loc}
+                <span>{index + 1}. {loc}</span>
               </div>
             ))
           ) : (
             <p>No se encontraron ubicaciones.</p>
           )}
-          <button type="button" class="btn btn-success"><i class="fa-solid fa-route"></i> Optimizar mi ruta</button>
+          <button onClick={handleSaveLocations}>
+            Guardar Ubicaciones
+          </button>
         </>
       )}
     </div>

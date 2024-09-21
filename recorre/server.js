@@ -18,6 +18,11 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL
 )`);
+db.run(`CREATE TABLE IF NOT EXISTS locations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL
+)`);
+
 
 app.post('/signup', (req, res) => {
   const { username, password } = req.body;
@@ -45,8 +50,22 @@ app.post('/login', (req, res) => {
     return res.status(200).json({ message: 'Inicio de sesión exitoso', userId: row.id });
   });
 });
+app.post('/locations', (req, res) => {
+  const { names } = req.body; // Suponiendo que envías un array de nombres
+  const insertLocationQuery = `INSERT INTO locations (name) VALUES (?)`;
+  
+  names.forEach(name => {
+    db.run(insertLocationQuery, [name], function (err) {
+      if (err) {
+        return res.status(400).json({ message: 'Error al guardar la ubicación.' });
+      }
+    });
+  });
+  
+  return res.status(201).json({ message: 'Ubicaciones guardadas exitosamente.' });
+});
 
-const PORT = 3002;
+const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
 });
