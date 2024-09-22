@@ -49,7 +49,7 @@ const LocationList = ({ locations, onRemoveLocation }) => {
       top: '10px',
       left: '10px',
       width: isCollapsed ? '50px' : '250px',
-      height: 'calc(100% - 20px)',
+      height: 'calc(100% - 70px)',
       backgroundColor: '#1c1c1c',
       color: 'white',
       padding: '20px',
