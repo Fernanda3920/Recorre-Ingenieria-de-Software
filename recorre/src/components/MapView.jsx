@@ -114,6 +114,14 @@ const MapView = () => {
     setLocations((prev) => prev.filter(location => location.display_name !== loc));
   };
 
+  const onAddLocationToMap = (locationName) => {
+    const foundLocation = locations.find(loc => loc.display_name === locationName);
+    if (foundLocation) {
+      setPosition([foundLocation.lat, foundLocation.lng]);
+      mapRef.current.setView([foundLocation.lat, foundLocation.lng], 15);
+    }
+  };
+
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
       <SearchBar onSearch={handleSearch} value={address} />
@@ -146,6 +154,7 @@ const MapView = () => {
       <LocationList
         locations={locations.map(loc => loc.display_name)}
         onRemoveLocation={handleRemoveLocation}
+        onAddLocationToMap={onAddLocationToMap}
       />
       <VehicleDropdown handleOptimizeRoute={handleOptimizeRoute} />
     </div>
