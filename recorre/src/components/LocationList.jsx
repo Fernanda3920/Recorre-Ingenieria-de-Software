@@ -195,6 +195,7 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
             <i className="fas fa-cloud" style={{ color: '#DEDEDE', fontSize: '24px' }}></i>
             <p>Clima</p>
           </div>
+          
         </div>
       ) : (
         <>
