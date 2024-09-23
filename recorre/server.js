@@ -50,20 +50,17 @@ app.post('/login', (req, res) => {
     return res.status(200).json({ message: 'Inicio de sesión exitoso', userId: row.id });
   });
 });
-app.post('/locations', (req, res) => {
-  const { names } = req.body; // Suponiendo que envías un array de nombres
-  const insertLocationQuery = `INSERT INTO locations (name) VALUES (?)`;
-  
-  names.forEach(name => {
-    db.run(insertLocationQuery, [name], function (err) {
-      if (err) {
-        return res.status(400).json({ message: 'Error al guardar la ubicación.' });
-      }
-    });
+app.get('/locations', (req, res) => {
+  const selectLocationsQuery = `SELECT * FROM locations`;
+
+  db.all(selectLocationsQuery, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al obtener las ubicaciones.' });
+    }
+    return res.status(200).json(rows.map(row => row.name));
   });
-  
-  return res.status(201).json({ message: 'Ubicaciones guardadas exitosamente.' });
 });
+
 
 const PORT = 3001;
 app.listen(PORT, () => {

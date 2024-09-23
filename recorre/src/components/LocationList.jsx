@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import SpeechSynthesis from './SpeechSynthesis.jsx';
 import './styles/LocationList.css';
+import WeatherSuggestion from './WeatherSuggestion.jsx';
+
 
 const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [userLocation, setUserLocation] = useState(null); 
   const [activePanel, setActivePanel] = useState('');
   const [savedLocations, setSavedLocations] = useState([]);
   const [iconColor, setIconColor] = useState('#38C7D5');
@@ -11,32 +14,40 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [optimizedRoute, setOptimizedRoute] = useState({ instructions: [] });
 
-  const toggleCollapse = (panel) => {
-    if (panel === 'indicaciones' && instructions.length === 0) {
-      // No permitir que se expanda el panel de indicaciones si no hay instrucciones
-      alert('Se necesita optimizar la ruta antes de ver las indicaciones.');
-      return;
-    }
-  
+  const toggleCollapse = (panel) => {  
     if (isCollapsed || activePanel !== panel) {
       setIsCollapsed(false);
       setActivePanel(panel);
       if (panel === 'indicaciones') {
         fetchRouteInstructions();
       } else if (panel === 'ubicaciones') {
-        fetchSavedLocations(); // Cargar ubicaciones al abrir el panel
+        fetchSavedLocations();
+      } else if (panel === 'sugerencias') {
       }
     } else {
       setIsCollapsed(true);
       setActivePanel('');
     }
   };
+  useEffect(() => {
+    const getUserLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({ lat: latitude, lng: longitude }); // Cambié 'lon' a 'lng'
+          },
+          (error) => {
+            console.error('Error obteniendo la ubicación:', error);
+          }
+        );
+      } else {
+        console.error('La geolocalización no es compatible con este navegador.');
+      }
+    };
+    getUserLocation(); // Llamamos a la función para obtener la ubicación
+  }, []);
   
-
-  const handleRemoveLocation = (loc) => {
-    onRemoveLocation(loc);
-  };
-
   const handleSaveLocations = async () => {
     if (locations.length === 0) {
       alert('No hay ubicaciones para guardar.');
@@ -62,13 +73,11 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
     }
   };
   
-
   const fetchRouteInstructions = async () => {
-    if (!activePanel === 'indicaciones' || locations.length < 2) {
+    if (activePanel !== 'indicaciones' || locations.length < 2) {
       setInstructions(["Se necesitan al menos dos ubicaciones para obtener indicaciones."]);
       return;
     }
-  
   
     setIsLoading(true);
   
@@ -124,7 +133,7 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
         throw new Error('Error al obtener las ubicaciones');
       }
       const data = await response.json();
-      setSavedLocations(data); // Establece las ubicaciones en el estado
+      setSavedLocations(data);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -173,7 +182,7 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
       </button>
 
       {isCollapsed ? (
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px' }}>
+        <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '10px' }}>
           <div onClick={() => toggleCollapse('ubicaciones')} style={{ cursor: 'pointer' }}>
             <i className="fas fa-map-marker-alt" style={{ color: iconColor, fontSize: '24px' }}></i>
             <p>Ubicaciones</p>
@@ -182,9 +191,9 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
             <i className="fas fa-info-circle" style={{ color: iconColor, fontSize: '24px' }}></i>
             <p>Indicaciones</p>
           </div>
-          <div onClick={toggleCollapse} style={{ cursor: 'pointer' }}>
-            <i className ="fa-solid fa-compass" style={{ color: iconColor, fontSize: '24px' }}></i>
-            <p>Sugerencias</p>
+          <div onClick={() => toggleCollapse('sugerencias')} style={{ cursor: 'pointer' }}>
+            <i className="fas fa-cloud" style={{ color: '#DEDEDE', fontSize: '24px' }}></i>
+            <p>Clima</p>
           </div>
         </div>
       ) : (
@@ -193,62 +202,64 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
             <>
               <h4>Ubicaciones</h4>
               {savedLocations.length > 0 ? (
- <>
- {savedLocations.map((loc, index) => (
-   <div key={index} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
-     <i 
-       className="fas fa-map-marker-alt" 
-       style={{ color: '#38C7D5', cursor: 'pointer', marginRight: '5px' }} 
-       onClick={() => onAddLocationToMap(loc)} 
-     ></i>
-     <span>{index + 1}. {loc}</span>
-   </div>
- ))}
- {locations.length > 0 && (
-   <button onClick={handleSaveLocations} className="btn btn-outline-light">
-     Guardar Ubicaciones
-   </button>
- )}
-</>
-
-) : (
-  <p>No se encontraron ubicaciones.</p>
-)}
-
+                <>
+                  {savedLocations.map((loc, index) => (
+                    <div key={index} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
+                      <i 
+                        className="fas fa-map-marker-alt" 
+                        style={{ color: '#38C7D5', cursor: 'pointer', marginRight: '5px' }} 
+                        onClick={() => onAddLocationToMap(loc)} 
+                      ></i>
+                      <span>{index + 1}. {loc}</span>
+                    </div>
+                  ))}
+                  {locations.length > 0 && (
+                    <button onClick={handleSaveLocations} className="btn btn-outline-light">
+                      Guardar Ubicaciones
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p>No se encontraron ubicaciones.</p>
+              )}
             </>
           )}
-{activePanel === 'indicaciones' && (
-  <div style={{ maxHeight: '500px', overflowY: 'auto', marginTop: '25px' }}>
-    <h4>Indicaciones</h4>
-    {isLoading ? (
-      <p>Cargando instrucciones...</p>
-    ) : instructions.length > 0 && instructions[0].text ? (
-      <>
-        {instructions.map((instr, index) => {
-          // Solo mapeamos si hay texto en las instrucciones
-          const distance = instr.distance ? `${instr.distance} metros` : 'desconocida';
-          const time = instr.time ? `${Math.round(instr.time / 1000)} segundos` : 'desconocida';
-
-          return (
-            <div key={index}>
-              <p>
-                <strong>{index + 1}. {instr.text}</strong> - {distance}
-              </p>
-              <p>Duración: {time}</p>
-            </div>
-          );
-        })}
-        {optimizedRoute.instructions.length > 0 && (
-          <SpeechSynthesis optimizedRoute={optimizedRoute} />
-        )}
-      </>
-    ) : (
-      <p>Esperando ruta optimizada...</p> // Este mensaje se muestra si no hay instrucciones disponibles
-    )}
+         {activePanel === 'sugerencias' && (
+  <div>
+    <WeatherSuggestion userLocation={userLocation} /> 
   </div>
 )}
 
+          {activePanel === 'indicaciones' && (
+            <div style={{ maxHeight: '500px', overflowY: 'auto', marginTop: '25px' }}>
+              <h4>Indicaciones</h4>
+              {isLoading ? (
+                <p>Cargando instrucciones...</p>
+              ) : instructions.length > 0 && instructions[0].text ? (
+                <>
+                  {instructions.map((instr, index) => {
+                    const distance = instr.distance ? `${instr.distance} metros` : 'desconocida';
+                    const time = instr.time ? `${Math.round(instr.time / 1000)} segundos` : 'desconocida';
 
+                    return (
+                      <div key={index}>
+                        <p>
+                          <strong>{index + 1}. {instr.text}</strong> - {distance}
+                        </p>
+                        <p>Duración: {time}</p>
+                      </div>
+                    );
+                  })}
+                  {optimizedRoute.instructions.length > 0 && (
+                    <SpeechSynthesis optimizedRoute={optimizedRoute} />
+                  )}
+                </>
+              ) : (
+                <p>Esperando ruta optimizada...</p>
+              )}
+            </div>
+          )}
+           
         </>
       )}
     </div>
