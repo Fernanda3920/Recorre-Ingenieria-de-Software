@@ -4,6 +4,9 @@ import SignUp from './components/SignUp';  // Asegúrate de tener la ruta correc
 import Login from './components/Login';      // Asegúrate de tener la ruta correcta
 import MapView from './components/MapView';
 import ParkingMap from './components/WeatherSuggestion';
+import Restaurantes from './components/Restaurantes';
+import Cafeterias from './components/Cafeterias';
+import Bares from './components/Bares';
 
 function App() {
   return (
@@ -14,6 +17,11 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/map" element={<MapView />} />
+          <Route path="/Restaurantes" element={<Restaurantes />} />
+          <Route path="/Bares" element={<Bares/>} />
+          <Route path="/Cafeterias" element={<Cafeterias />} />
+
+
         </Routes>
       </div>
     </Router>

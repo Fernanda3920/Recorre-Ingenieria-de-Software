@@ -1,0 +1,45 @@
+.custom-card {
+    border: none; /* Elimina el borde predeterminado */
+    border-radius: 10px; /* Bordes redondeados */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Efecto de transición */
+    background-color: #d5006d; /* Color de fondo rosa Barbie */
+    color: white; /* Cambia el color del texto a blanco para mejor contraste */
+    max-width: 100%; /* Asegura que no se desborde el contenedor */
+  }
+  
+  .card-img-top, .card-img-bottom {
+    border-radius: 10px 10px 0 0; /* Bordes redondeados para la imagen superior */
+  }
+  
+  .card-img-bottom {
+    border-radius: 0 0 10px 10px; /* Bordes redondeados para la imagen inferior */
+  }
+  
+  /* Efecto de hover para las tarjetas */
+  .card:hover {
+    transform: translateY(-5px); /* Levantar la tarjeta al pasar el mouse */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+  }
+  
+  body {
+    font-family: 'Poppins', sans-serif; /* Usa Poppins como fuente principal */
+    margin: 0;
+    padding: 0;
+  }
+  
+  .navbar {
+    background-color: #d5006d; /* Rosa Barbie */
+  }
+  
+  .navbar-link {
+    color: white; /* Color de texto blanco para los enlaces */
+    text-decoration: none; /* Sin subrayado */
+  }
+  
+  /* Estilo para centrar tarjetas en dispositivos más pequeños */
+  @media (max-width: 767.98px) {
+    .row {
+      justify-content: center; /* Centrar en pantallas pequeñas */
+    }
+  }
+  

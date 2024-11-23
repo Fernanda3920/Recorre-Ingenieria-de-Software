@@ -1,0 +1,91 @@
+/* Contenedor de la página de inicio de sesión */
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto; /* Centrando el contenedor */
+  padding: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  border-radius: 8px; /* Bordes redondeados */
+  background-color: #f9f9f9; /* Fondo claro */
+  margin-top: 50px; /* Separación superior */
+}
+
+/* Estilo del encabezado */
+.login-header {
+  text-align: center; /* Centrar el texto */
+  margin-bottom: 20px; /* Espacio debajo del encabezado */
+  color: #333;
+  font-size: 24px;
+}
+
+/* Estilo del formulario */
+.login-form {
+  display: flex; /* Usar flexbox */
+  flex-direction: column; /* Colocar elementos en columna */
+}
+
+/* Estilo de los inputs */
+.login-input {
+  margin-bottom: 15px; /* Espaciado entre los campos */
+  padding: 10px; /* Espaciado interno */
+  border: 1px solid #ddd; /* Borde gris claro */
+  border-radius: 5px; /* Bordes redondeados */
+  font-size: 16px;
+}
+
+/* Estilo del botón */
+.login-button {
+  padding: 10px; /* Espaciado interno */
+  border: none; /* Sin borde */
+  border-radius: 5px; /* Bordes redondeados */
+  background-color: #c01787; /* Color principal */
+  color: white; /* Texto blanco */
+  cursor: pointer; /* Cambiar cursor a puntero */
+  font-size: 16px;
+}
+
+.login-button:hover {
+  background-color: #ce2d86; /* Color en hover */
+}
+
+/* Estilo del mensaje */
+.login-message {
+  text-align: center; /* Centrar el texto del mensaje */
+  margin-top: 15px; /* Espaciado encima */
+  color: #d9534f; /* Color rojo para errores */
+}
+
+/* Estilo del enlace de registro */
+.signup-link {
+  color: #007bff;
+  text-decoration: none; /* Sin subrayado */
+}
+
+.signup-link:hover {
+  text-decoration: underline; /* Subrayado al pasar el cursor */
+}
+.title-recorrer {
+  font-family: 'Roboto', sans-serif; /* Cambia la fuente */
+  font-size: 2.5rem; /* Tamaño del texto */
+  font-weight: bold; /* Negrita */
+  text-align: center; /* Centrado */
+  color: #ef2da5; /* Color azul */
+  text-transform: uppercase; /* Mayúsculas */
+  letter-spacing: 0.1rem; /* Espaciado entre letras */
+  margin-bottom: 1.5rem; /* Separación inferior */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Sombra del texto */
+}
+
+.container-login {
+  height: 100vh; /* Altura total de la ventana */
+  width: 100vw; /* Ancho total de la ventana */
+  background-image: url('https://cdn.pixabay.com/photo/2023/04/04/18/37/ai-generated-7900000_1280.jpg');
+  background-size: cover; /* Escala la imagen para cubrir toda el área */
+  background-position: center; /* Centra la imagen */
+  background-repeat: no-repeat; /* Evita que se repita */
+  display: flex; /* Usamos flexbox para centrar el contenido */
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+}
+
+

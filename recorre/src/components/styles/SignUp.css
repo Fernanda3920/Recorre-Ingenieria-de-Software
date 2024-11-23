@@ -1,0 +1,52 @@
+
+/* Contenedor de la página de inicio de sesión */
+.SignUp-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto; /* Centrando el contenedor */
+    padding: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    border-radius: 8px; /* Bordes redondeados */
+    background-color: #f9f9f9; /* Fondo claro */
+    margin-top: 50px; /* Separación superior */
+  }
+  
+
+/* Estilo del encabezado */
+.SignUp-header {
+    text-align: center; /* Centrar el texto */
+    margin-bottom: 20px; /* Espacio debajo del encabezado */
+  }
+  
+  /* Estilo del formulario */
+  .SignUp-form {
+    display: flex; /* Usar flexbox */
+    flex-direction: column; /* Colocar elementos en columna */
+  }
+  
+  /* Estilo de los inputs */
+  .SignUp-input {
+    margin-bottom: 15px; /* Espaciado entre los campos */
+    padding: 10px; /* Espaciado interno */
+    border: 1px solid #ddd; /* Borde gris claro */
+    border-radius: 5px; /* Bordes redondeados */
+  }
+  
+  /* Estilo del botón */
+  .SignUp-button {
+    padding: 10px; /* Espaciado interno */
+    border: none; /* Sin borde */
+    border-radius: 5px; /* Bordes redondeados */
+    background-color: #c01787; 
+    color: white; /* Texto blanco */
+    cursor: pointer; /* Cambiar cursor a puntero */
+  }
+  .SignUp-button:hover {
+    background-color:#ce2d86; /* Color en hover */
+  }
+/* Estilo del mensaje */
+.SignUp-message {
+    text-align: center; /* Centrar el texto del mensaje */
+    margin-top: 15px; /* Espaciado encima */
+    color: #d9534f; /* Color rojo para errores */
+  }

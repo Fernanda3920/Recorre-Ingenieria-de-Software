@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import SpeechSynthesis from './SpeechSynthesis.jsx';
 import './styles/LocationList.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Importa el CSS de Toastify
 import WeatherSuggestion from './WeatherSuggestion.jsx';
 
 
 const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [userLocation, setUserLocation] = useState(null); 
+  const [userLocation, setUserLocation] = useState(null);
   const [activePanel, setActivePanel] = useState('');
   const [savedLocations, setSavedLocations] = useState([]);
+  const [savedCafes, setSavedCafes] = useState([]); // Definir savedCafes en el estado
+  const [savedBars, setSavedBars] = useState([]); // Definir savedBars en el estado
+  const [savedRestaurants, setSavedRestaurants] = useState([]); // Definir savedRestaurants en el estado
   const [iconColor, setIconColor] = useState('#38C7D5');
   const [instructions, setInstructions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,29 +27,37 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
         fetchRouteInstructions();
       } else if (panel === 'ubicaciones') {
         fetchSavedLocations();
-      } else if (panel === 'sugerencias') {
+      } else if (panel === 'cafes') {
+        fetchSavedCafes();
+      } else if (panel === 'bars') {
+        fetchSavedBars();
+      } else if (panel === 'restaurants') {
+        fetchSavedRestaurants();
       }
     } else {
       setIsCollapsed(true);
       setActivePanel('');
     }
   };
+
   useEffect(() => {
     const getUserLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            setUserLocation({ lat: latitude, lng: longitude }); // Cambié 'lon' a 'lng'
+            setUserLocation({ lat: latitude, lng: longitude });
           },
           (error) => {
             console.error('Error obteniendo la ubicación:', error);
+            setUserLocation(null); // Asegúrate de manejar el estado de error
           }
         );
       } else {
         console.error('La geolocalización no es compatible con este navegador.');
       }
     };
+    
     getUserLocation(); // Llamamos a la función para obtener la ubicación
   }, []);
   
@@ -55,49 +68,67 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
     }
   
     try {
+      console.log('Enviando datos:', { locations }); // Asegúrate de que esto tenga la estructura correcta
+  
       const response = await fetch('http://localhost:3001/locations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ names: locations }),
+        body: JSON.stringify({ locations }), // Asegúrate de que "locations" está en este formato
       });
   
       if (!response.ok) {
+        const errorDetails = await response.text(); // Más detalles del error
+        console.error('Error desde el servidor:', errorDetails);
         throw new Error('Error al guardar las ubicaciones');
       }
   
       const data = await response.json();
+      console.log('Respuesta del servidor:', data);
+      alert('Ubicaciones guardadas exitosamente.');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error:', error.message);
+      alert('Ocurrió un error al guardar las ubicaciones.');
     }
   };
   
+  
+  
   const fetchRouteInstructions = async () => {
+    // Verifica que el panel activo sea el correcto y que haya al menos dos ubicaciones
     if (activePanel !== 'indicaciones' || locations.length < 2) {
-      setInstructions(["Se necesitan al menos dos ubicaciones para obtener indicaciones."]);
+      setInstructions([{ text: "Se necesitan al menos dos ubicaciones para obtener indicaciones." }]);
       return;
     }
   
     setIsLoading(true);
   
+    // Función auxiliar para obtener las coordenadas de una dirección
     const getCoordinates = async (address) => {
       const apiKey = 'c69e018bdfc3478ba03c4aca0344d419';
-      const response = await fetch(
-        `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${apiKey}`
-      );
-      const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        return data.results[0].geometry;
-      } else {
-        throw new Error(`No se encontraron coordenadas para la dirección: ${address}`);
+      try {
+        const response = await fetch(
+          `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${apiKey}`
+        );
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          return data.results[0].geometry; // Devuelve latitud y longitud
+        } else {
+          throw new Error(`No se encontraron coordenadas para la dirección: ${address}`);
+        }
+      } catch (error) {
+        console.error('Error obteniendo coordenadas:', error);
+        throw error;
       }
     };
   
     try {
+      // Obtiene las coordenadas de las dos primeras ubicaciones
       const point1 = await getCoordinates(locations[0]);
       const point2 = await getCoordinates(locations[1]);
   
+      // Realiza la solicitud a la API de GraphHopper
       const baseURL = 'https://graphhopper.com/api/1/route';
       const apiKey = '8bfb01f1-4e92-4260-abf0-7e19014f7b5c';
   
@@ -110,22 +141,29 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
       }
   
       const data = await response.json();
-      
-      const routeInstructions = data.paths[0].instructions.map((instr) => ({
+  
+      // Procesa las instrucciones de la ruta
+      const routeInstructions = data.paths[0]?.instructions.map((instr) => ({
         text: instr.text,
         distance: instr.distance,
-        time: instr.time
-      }));
+        time: instr.time,
+      })) || [];
   
+      if (routeInstructions.length === 0) {
+        throw new Error('No se encontraron instrucciones en la respuesta.');
+      }
+  
+      // Actualiza el estado con las instrucciones optimizadas
       setInstructions(routeInstructions);
       setOptimizedRoute({ instructions: routeInstructions });
     } catch (error) {
-      setInstructions(["No se pudieron cargar las instrucciones."]);
+      console.error('Error al obtener instrucciones:', error);
+      setInstructions([{ text: "No se pudieron cargar las instrucciones." }]);
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   const fetchSavedLocations = async () => {
     try {
       const response = await fetch('http://localhost:3001/locations');
@@ -148,7 +186,51 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
       return () => clearTimeout(timer);
     }
   }, [savedLocations]);
-
+  const fetchSavedCafes = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/cafes');
+      if (!response.ok) {
+        throw new Error('Error al obtener las cafeterías');
+      }
+      const data = await response.json();
+      setSavedCafes(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  const fetchSavedBars = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/bars');
+      if (!response.ok) {
+        throw new Error('Error al obtener los bares');
+      }
+      const data = await response.json();
+      setSavedBars(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  const fetchSavedRestaurants = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/restaurants');
+      if (!response.ok) {
+        throw new Error('Error al obtener los restaurantes');
+      }
+      const data = await response.json();
+      setSavedRestaurants(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  const handleCopyToClipboard = (location) => {
+    navigator.clipboard.writeText(location)
+      .then(() => {
+        alert(`Copiado: ${location}, buscame!`);
+      })
+      .catch((err) => {
+        console.error('Error al copiar al portapapeles:', err);
+      });
+  };
   return (
     <div style={{
       position: 'absolute',
@@ -195,10 +277,89 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
             <i className="fas fa-cloud" style={{ color: '#DEDEDE', fontSize: '24px' }}></i>
             <p>Clima</p>
           </div>
+          <div onClick={() => toggleCollapse('cafes')} style={{ cursor: 'pointer' }}>
+            <i className="fa-solid fa-mug-saucer" style={{ color: '#DEDEDE', fontSize: '24px' }}></i>
+            <p>Cafés</p>
+          </div>
+          <div onClick={() => toggleCollapse('bars')} style={{ cursor: 'pointer' }}>
+            <i className="fa-solid fa-wine-glass" style={{ color: '#DEDEDE', fontSize: '24px' }}></i>
+            <p>Bares</p>
+          </div>
+          <div onClick={() => toggleCollapse('restaurants')} style={{ cursor: 'pointer' }}>
+            <i className="fa-solid fa-utensils" style={{ color: '#DEDEDE', fontSize: '24px' }}></i>
+            <p>Restaurantes</p>
           
+          </div>
         </div>
       ) : (
         <>
+       {activePanel === 'cafes' && (
+  <div>
+    <h4>Cafeterías</h4>
+    {savedCafes.length > 0 ? (
+      savedCafes.map((cafe, index) => (
+        <div key={index}>
+          <i className="fa-solid fa-mug-saucer"/>
+          <span 
+             onClick={() => {
+              handleCopyToClipboard(cafe); // Copiar al portapapeles
+            }}  
+            style={{ cursor: 'pointer' }}
+          >
+            {cafe}
+          </span>
+        </div>
+      ))
+    ) : (
+      <p>No se encontraron cafeterías.</p>
+    )}
+  </div>
+)}
+{activePanel === 'bars' && (
+  <div>
+    <h4>Bares</h4>
+    {savedBars.length > 0 ? (
+      savedBars.map((bar, index) => (
+        <div key={index}>
+          <i className="fa-solid fa-wine-glass" />
+          <span 
+            onClick={() => {
+              handleCopyToClipboard(bar); // Cambia cafe a bar
+            }}  
+            style={{ cursor: 'pointer' }}
+          >
+            {bar}
+          </span>
+        </div>
+      ))
+    ) : (
+      <p>No se encontraron bares.</p>
+    )}
+  </div>
+)}
+{activePanel === 'restaurants' && (
+  <div>
+    <h4>Restaurantes</h4>
+    {savedRestaurants.length > 0 ? (
+      savedRestaurants.map((restaurant, index) => (
+        <div key={index}>
+          <i className="fa-solid fa-utensils" />
+          <span 
+            onClick={() => {
+              handleCopyToClipboard(restaurant); // Cambia cafe a restaurant
+            }} 
+            style={{ cursor: 'pointer' }}
+          >
+            {restaurant}
+          </span>
+        </div>
+      ))
+    ) : (
+      <p>No se encontraron restaurantes.</p>
+    )}
+  </div>
+)}
+
           {activePanel === 'ubicaciones' && (
             <>
               <h4>Ubicaciones</h4>
@@ -214,11 +375,7 @@ const LocationList = ({ locations, onRemoveLocation, onAddLocationToMap }) => {
                       <span>{index + 1}. {loc}</span>
                     </div>
                   ))}
-                  {locations.length > 0 && (
-                    <button onClick={handleSaveLocations} className="btn btn-outline-light">
-                      Guardar Ubicaciones
-                    </button>
-                  )}
+                 
                 </>
               ) : (
                 <p>No se encontraron ubicaciones.</p>

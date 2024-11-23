@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+//import './style/SignUp.css';  // Importación de la hoja de estilos
+import './styles/SignUp.css';
+
 
 function SignUp() {
   const [username, setUsername] = useState('');
@@ -9,7 +12,7 @@ function SignUp() {
     e.preventDefault();
   
     try {
-      const response = await fetch('http://localhost:3002/signup', {
+      const response = await fetch('http://localhost:3001/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,14 +33,25 @@ function SignUp() {
   };
   
   return (
-    <div>
-      <h2>Registro</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Usuario" />
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" />
-        <button type="submit">Registrarse</button>
+    <div className='container-login'>
+    <div className='SignUp-container'>
+      <h1 className='SignUp-header'>Registro</h1>
+      <form onSubmit={handleSubmit} className='SignUp-form'>
+        <input type="text" 
+        value={username} 
+        onChange={(e) => setUsername(e.target.value)} 
+        placeholder="Usuario"
+        className='SignUp-input' />
+        <input 
+        type="password" 
+        value={password} 
+        onChange={(e) => setPassword(e.target.value)} 
+        placeholder="Contraseña" 
+        className='SignUp-input'/>
+        <button type="submit" className='SignUp-button'>Registrarse</button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p className="SignUp-message">{message}</p>}
+    </div>
     </div>
   );
 }

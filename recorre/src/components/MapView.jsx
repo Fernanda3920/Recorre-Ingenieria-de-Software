@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import SearchBar from './SearchBar';
 import LocationList from './LocationList';
+import { Link } from 'react-router-dom'; // Importar Link para navegación
 import 'bootstrap/dist/css/bootstrap.min.css';
 import VehicleDropdown from './VehicleDropdown';
 import polyline from '@mapbox/polyline';
@@ -11,6 +12,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// Eliminando la opción por defecto del icono del marcador
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -27,6 +29,7 @@ const MapView = () => {
   const [vehicleType, setVehicleType] = useState('car'); // Valor por defecto
   const mapRef = useRef(null);
 
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
@@ -38,9 +41,13 @@ const MapView = () => {
   }, []);
 
   const fetchAddress = async (lat, lng) => {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-    const data = await response.json();
-    setAddress(data.display_name || `Lat: ${lat}, Lon: ${lng}`);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await response.json();
+      setAddress(data.display_name || `Lat: ${lat}, Lon: ${lng}`);
+    } catch (error) {
+      console.error('Error fetching address:', error);
+    }
   };
 
   const handleSearch = async (query) => {
@@ -63,7 +70,7 @@ const MapView = () => {
   };
 
   const fetchOptimizedRoute = async (points) => {
-    const apiKey = '8bfb01f1-4e92-4260-abf0-7e19014f7b5c';
+    const apiKey =  '8bfb01f1-4e92-4260-abf0-7e19014f7b5c'; // Reemplaza esto por tu API key en un lugar seguro
     const pointsString = points.map(point => `${point.lat},${point.lng}`).join('&point=');
     const url = `https://graphhopper.com/api/1/route?point=${pointsString}&vehicle=${vehicleType}&locale=en&points_encoded=true&key=${apiKey}`;
     try {
@@ -123,42 +130,65 @@ const MapView = () => {
   };
 
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-      <SearchBar onSearch={handleSearch} value={address} />
-      {position && (
-        <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }} ref={mapRef}>
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          />
-          <ZoomControl position="bottomright" />
-          {locations.map((loc, index) => (
-            <Marker
-              key={index}
-              position={[loc.lat, loc.lng]}
-              draggable={true}
-              eventHandlers={{
-                dragend: (e) => handleMarkerDragEnd(loc, e)
-              }}
-            >
-              <Popup>
-                {loc.display_name || 'Ubicación sin nombre'}
-              </Popup>
-            </Marker>
-          ))}
-          {route.length > 0 && (
-            <Polyline positions={route} color="#38C7D5" />
-          )}
-        </MapContainer>
-      )}
-      <LocationList
-        locations={locations.map(loc => loc.display_name)}
-        onRemoveLocation={handleRemoveLocation}
-        onAddLocationToMap={onAddLocationToMap}
-      />
-      <VehicleDropdown handleOptimizeRoute={handleOptimizeRoute} />
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Agregando el Navbar personalizado */}
+      <nav className="navbar" style={{ backgroundColor: '#d5006d' }}>
+        <div className="container-fluid">
+          <h2  className="navbar-logo text-white">Divierte</h2>
+          <ul className="navbar-menu d-flex list-unstyled">
+            <li className="me-3">
+              <Link to="/Cafeterias" className="navbar-link text-white">Cafeterías</Link>
+            </li>
+            <li className="me-3">
+              <Link to="/Restaurantes" className="navbar-link text-white">Restaurantes</Link>
+            </li>
+            <li className="me-3">
+              <Link to="/Bares" className="navbar-link text-white">Bares</Link>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      {/* Contenedor que ajusta el mapa dejando espacio para el navbar */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <SearchBar onSearch={handleSearch} value={address} />
+        {position && (
+          <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }} ref={mapRef}>
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            />
+            <ZoomControl position="bottomright" />
+            {locations.map((loc, index) => (
+              <Marker
+                key={index}
+                position={[loc.lat, loc.lng]}
+                draggable={true}
+                eventHandlers={{
+                  dragend: (e) => handleMarkerDragEnd(loc, e)
+                }}
+              >
+                <Popup>
+                  {loc.display_name || 'Ubicación sin nombre'}
+                </Popup>
+              </Marker>
+            ))}
+            {route.length > 0 && (
+              <Polyline positions={route} color="#38C7D5" />
+            )}
+          </MapContainer>
+        )}
+        <LocationList
+          locations={locations.map(loc => loc.display_name)}
+          onRemoveLocation={handleRemoveLocation}
+          onAddLocationToMap={onAddLocationToMap}
+        />
+        <VehicleDropdown handleOptimizeRoute={handleOptimizeRoute} />
+      </div>
     </div>
   );
 };
 
 export default MapView;
+

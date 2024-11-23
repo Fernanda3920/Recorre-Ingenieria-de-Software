@@ -13,6 +13,7 @@ const db = new sqlite3.Database('./database.db', (err) => {
   console.log('Conectado a la base de datos SQLite.');
 });
 
+
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT NOT NULL UNIQUE,
@@ -61,6 +62,35 @@ app.get('/locations', (req, res) => {
   });
 });
 
+app.get('/cafes', (req, res) => {
+  const selectCafesQuery = `SELECT * FROM cafe`;
+  db.all(selectCafesQuery, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al obtener las cafeterías.' + err});
+    }
+    return res.status(200).json(rows.map(row => row.nameCafe));
+  });
+});
+
+app.get('/restaurants', (req, res) => {
+  const selectRestaurantsQuery = `SELECT * FROM restaurant`;
+  db.all(selectRestaurantsQuery, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al obtener los restaurantes.' });
+    }
+    return res.status(200).json(rows.map(row => row.nameRes));
+  });
+});
+
+app.get('/bars', (req, res) => {
+  const selectBarsQuery = `SELECT * FROM bars`;
+  db.all(selectBarsQuery, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al obtener los bares.' });
+    }
+    return res.status(200).json(rows.map(row => row.nameBars));
+  });
+});
 
 const PORT = 3001;
 app.listen(PORT, () => {
